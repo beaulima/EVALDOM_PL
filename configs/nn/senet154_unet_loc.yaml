@@ -1,0 +1,2 @@
+# @package _group_
+_target_: src.nn.models.SeResNext50_Unet_Loc
