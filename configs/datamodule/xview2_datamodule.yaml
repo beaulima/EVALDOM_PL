@@ -1,9 +1,12 @@
+# @package _group_
 _target_: src.datamodules.xview2_datamodule.Xview2DataModule
 
-root: ${data_dir}
-mean_arr_path: ${data_dir}/meta/mean.npy
-batch_size: 32
-train_val_test_split: [0.75, 0.25]
-num_workers: 10
+train_dir: [ "${data_dir}/train", "${data_dir}/tier3" ]
+test_dir: [ "${data_dir}/test" ]
+mean_arr_path: "${data_dir}/meta/mean.npy"
+train_batch_size: 24
+valid_batch_size: 4
+train_val_test_split: [0.90, 0.10]
+num_workers: 14
 pin_memory: True
-crop_size: 256
+crop_size: 512

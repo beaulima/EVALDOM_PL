@@ -1,8 +1,10 @@
-# train with many loggers at once
+# @package _group_
+csv:
+    _target_: pytorch_lightning.loggers.csv_logs.CSVLogger
+    save_dir: "csv/"
+    name: "csv"
 
-defaults:
-    - csv.yaml
-    - wandb.yaml
-    # - neptune.yaml
-    # - comet.yaml
-    # - tensorboard.yaml
+tensorboard:
+    _target_: pytorch_lightning.loggers.tensorboard.TensorBoardLogger
+    save_dir: "tensorboard/"
+    name: "default"

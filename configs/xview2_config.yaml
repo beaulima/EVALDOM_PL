@@ -1,12 +1,19 @@
 # @package _global_
 
+
+
 # specify here default training configuration
 defaults:
     - trainer: minimal.yaml
-    - model: mnist_model.yaml
-    - datamodule: mnist_datamodule.yaml
-    - callbacks: wandb.yaml  # set this to null if you don't want to use callbacks
-    - logger: wandb.yaml   # set logger here or use command line (e.g. `python run.py logger=wandb`)
+    - optimizer: adam_gc.yaml
+    - lr_scheduler: multiple_step_lr_200.yaml
+    - criterion: comboloss.yaml
+    - nn: senet154_unet_loc.yaml
+#    - nn: unet.yaml
+    - model: segmentation.yaml
+    - datamodule: xview2_datamodule.yaml
+    - callbacks: default.yaml  # set this to null if you don't want to use callbacks
+    - logger: many_loggers.yaml   # set logger here or use command line (e.g. `python run.py logger=wandb`)
 
     - experiment: null
     - hparams_search: null
@@ -14,11 +21,20 @@ defaults:
     - hydra: default.yaml
 
     # enable color logging
-    - override hydra/hydra_logging: colorlog
-    - override hydra/job_logging: colorlog
+    - hydra/hydra_logging: colorlog
+    - hydra/job_logging: colorlog
+
+# do create masks
+do_create_masks: False
+
+# do test after trainingd
+do_test: True
+
+show_train: False
 
 # set global seed
 seed: 0
+experiment_id: su154_loc_seed_${seed}
 
 # path to original working directory
 # hydra hijacks working directory by changing it to the current log directory,
@@ -27,7 +43,7 @@ seed: 0
 work_dir: ${hydra:runtime.cwd}
 
 # path to folder with data
-data_dir: ${HOME_}/data/
+data_dir: /lu/bf_scratch/visi/beaulima/EvalDom/nobackup/data
 
 # use `python run.py debug=true` for easy debugging!
 # this will run 1 train, val and test loop with only 1 batch
@@ -40,3 +56,6 @@ print_config: True
 
 # disable python warnings if they annoy you
 ignore_warnings: True
+
+# resume
+resume: True

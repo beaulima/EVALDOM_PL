@@ -1,0 +1,5 @@
+# @package _group_
+_target_: src.criterions.losses.ComboLoss
+weights: {'dice': 0.8, 'bce':0.2}
+#weights: {'bce':1}
+per_image: False

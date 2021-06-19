@@ -1,31 +1,12 @@
-# --------- pytorch --------- #
-torch==1.8.1
-torchvision==0.9.1
-pytorch-lightning>=1.2.10
-torchmetrics
-
 # --------- hydra --------- #
-hydra-core==1.1.0.dev6
-hydra-colorlog==1.1.0.dev1
-hydra-optuna-sweeper==1.1.0.dev1
+
+hydra-colorlog
+hydra-optuna-sweeper
 # hydra-ray-launcher==0.1.2
 # hydra-submitit-launcher==1.1.0
+torchgeometry
+# pip install --no-binary opencv-python opencv-python
+#opencv-python
+imgaug
+torch_optimizer
 
-# --------- loggers --------- #
-wandb>=0.10.28
-# neptune-client
-# comet-ml
-# mlflow
-
-# --------- others --------- #
-rich
-python-dotenv
-pytest
-sh
-pre-commit
-scikit-learn
-pandas
-matplotlib
-seaborn
-# pudb
-# dvc

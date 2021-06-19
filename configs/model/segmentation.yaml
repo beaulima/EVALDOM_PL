@@ -1,4 +1,6 @@
+# @package _group_
 _target_: src.models.segmentation_model.SegmentationModel
+show_train: ${show_train}
 
 
 

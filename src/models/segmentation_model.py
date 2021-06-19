@@ -7,8 +7,9 @@ from torchmetrics import IoU
 import segmentation_models_pytorch as smp
 import torchgeometry as tgm
 import torch.optim.lr_scheduler as lr_scheduler
-from src.models.modules.unet import UNet
-
+import cv2 as cv
+import numpy as np
+import matplotlib.pyplot as plt
 from src.utils import utils
 log = utils.get_logger(__name__)
 
@@ -28,27 +29,13 @@ class SegmentationModel(LightningModule):
         https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html
     """
 
-    def __init__(
-            self,
-            in_channels: int = 3,
-            mid_channels: int = 512,
-            num_classes: int = 2,
-            **kwargs
-    ):
+    def __init__(self, show_train=False, **kwarg):
         super().__init__()
 
         # this line ensures params passed to LightningModule will be saved to ckpt
         # it also allows to access params with 'self.hparams' attribute
-        self.save_hyperparameters()
+        #self.save_hyperparameters()
 
-        if 0:
-            self.model = smp.Unet(encoder_name="resnet101",  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
-                                  encoder_weights="imagenet",
-                                  # use `imagenet` pre-trained weights for encoder initialization
-                                  in_channels=3,  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
-                                  classes=2,  # model output channels (number of classes in your dataset)
-                                  )
-        self.model = UNet(in_channels=in_channels, num_classes=num_classes,mid_channels=mid_channels)
 
         # use separate metric instance for train, val and test step
         # to ensure a proper reduction over the epoch
@@ -59,21 +46,20 @@ class SegmentationModel(LightningModule):
         self.train_iou = IoU(num_classes=2)
         self.val_iou = IoU(num_classes=2)
         self.test_iou = IoU(num_classes=2)
+        self.show_train = show_train
 
-        log.info(self.model)
-        log.info(f"Number of learnable parameters: {self.get_learnable_param_count()}")
-        log.info(f"Number of unlearned parameters: {self.get_unlearned_param_count()}")
 
     def get_learnable_param_count(self) -> int:
         """Returns the learnable (grad-enabled) parameter count in a module."""
-        return sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+        return sum(p.numel() for p in self.nn.parameters() if p.requires_grad)
 
     def get_unlearned_param_count(self,) -> int:
         """Returns the grad-disabled parameter count in a module."""
-        return sum(p.numel() for p in self.model.parameters() if not p.requires_grad)
+        return sum(p.numel() for p in self.nn.parameters() if not p.requires_grad)
 
     def forward(self, x: torch.Tensor):
-        return self.model(x)
+        return self.nn(x)
+
 
     def step(self, batch: Any):
         x = batch["images"]
@@ -81,14 +67,23 @@ class SegmentationModel(LightningModule):
         logits = self.forward(x)
         loss = self.criterion(logits, y)
         preds = torch.argmax(logits, dim=1)
-        return loss, preds, y
+        return loss,x, preds, y
 
     def training_step(self, batch: Any, batch_idx: int):
-        loss, preds, targets = self.step(batch)
+        loss, inputs, preds, targets = self.step(batch)
+
+        if self.show_train:
+            x0 = inputs[0].cpu().data.numpy().transpose(1, 2, 0)
+            y0 = targets[0].cpu().data.numpy()
+            preds0 = preds[0].cpu().data.numpy()
+            img = np.hstack([ x0.astype("float32"), np.dstack([y0,y0,y0]).astype("float32"), np.dstack([preds0,preds0,preds0]).astype("float32")])
+            cv.imshow("Training", img.astype("float32"))
+            cv.waitKey(10)
 
         # log train metrics
-        acc = self.train_accuracy(preds.cpu(), targets.cpu())
-        iou = self.train_iou(preds.cpu(), targets.cpu())
+
+        acc = self.val_accuracy(preds.to("cuda:0"), targets.to("cuda:0"))
+        iou = self.val_iou(preds.to("cuda:0"), targets.to("cuda:0"))
 
         self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=False)
         self.log("train/acc", acc, on_step=False, on_epoch=True, prog_bar=True)
@@ -104,11 +99,12 @@ class SegmentationModel(LightningModule):
         pass
 
     def validation_step(self, batch: Any, batch_idx: int):
-        loss, preds, targets = self.step(batch)
+        loss, inputs, preds, targets = self.step(batch)
 
         # log val metrics
-        acc = self.val_accuracy(preds.cpu(), targets.cpu())
-        iou = self.val_iou(preds.cpu(), targets.cpu())
+        acc = self.val_accuracy(preds.to("cuda:0"), targets.to("cuda:0"))
+        iou = self.val_iou(preds.to("cuda:0"), targets.to("cuda:0"))
+
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=False)
         self.log("val/acc", acc, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/iou", iou, on_step=False, on_epoch=True, prog_bar=True)
@@ -119,12 +115,15 @@ class SegmentationModel(LightningModule):
         pass
 
     def test_step(self, batch: Any, batch_idx: int):
-        loss, preds, targets = self.step(batch)
+        loss, inputs, preds, targets = self.step(batch)
 
         # log test metrics
-        acc = self.test_accuracy(preds, targets)
+        acc = self.val_accuracy(preds.to("cuda:0"), targets.to("cuda:0"))
+        iou = self.val_iou(preds.to("cuda:0"), targets.to("cuda:0"))
+
         self.log("test/loss", loss, on_step=False, on_epoch=True)
         self.log("test/acc", acc, on_step=False, on_epoch=True)
+        self.log("test/iou", iou, on_step=False, on_epoch=True)
 
         return {"loss": loss, "preds": preds, "targets": targets}
 
@@ -139,4 +138,6 @@ class SegmentationModel(LightningModule):
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
 
-        return {"optimizer":self.optimizer, "lr_schedulers": self.lr_schedulers}
+        self.lr_scheduler.name = 'train/lr'
+
+        return [self.optimizer], [self.lr_scheduler]

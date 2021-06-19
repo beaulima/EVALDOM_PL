@@ -1,5 +1,5 @@
 # @package _group_
-_target_:  torch.optim.AdamW
+_target_:  src.optimizers.gc_optimizers.Adam.Adam
 
 lr: 0.001
 weight_decay: 1e-6

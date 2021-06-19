@@ -3,7 +3,7 @@ import math
 import torch
 from torch.optim.optimizer import Optimizer
 from torch_optimizer.types import Betas2, OptFloat, OptLossClosure, Params, State
-from thxview2.optim.gc_optimizers.Centralization import centralized_gradient
+from .Centralization import centralized_gradient
 __all__ = ('AdaBound',)
 
 

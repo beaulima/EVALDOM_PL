@@ -1,2 +1,2 @@
 # update project conda environment
-conda env update -f ../conda-env.yml
+conda env update -f ../conda-env.yaml

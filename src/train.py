@@ -8,7 +8,6 @@ import hydra
 from omegaconf import DictConfig
 
 from src.utils import utils
-
 log = utils.get_logger(__name__)
 
 
@@ -26,14 +25,33 @@ def train(config: DictConfig) -> Optional[float]:
     # Set seed for random number generators in pytorch, numpy and python.random
     if "seed" in config:
         seed_everything(config.seed)
+        log.info(f"Seed value: {config.seed}")
 
     # Init Lightning datamodule
     log.info(f"Instantiating datamodule <{config.datamodule._target_}>")
     datamodule: LightningDataModule = hydra.utils.instantiate(config.datamodule)
 
+
     # Init Lightning model
     log.info(f"Instantiating model <{config.model._target_}>")
     model: LightningModule = hydra.utils.instantiate(config.model)
+
+    # Init Lightning nn
+    log.info(f"Instantiating neural net <{config.nn._target_}>")
+    model.nn: LightningModule = hydra.utils.instantiate(config.nn)
+
+
+    # Init optimizer
+    log.info(f"Instantiating optimizer <{config.optimizer._target_}>")
+    model.optimizer = hydra.utils.instantiate(config.optimizer, model.nn.parameters())
+
+    # Init lr scheduler
+    log.info(f"Instantiating leraning rate scheduler <{config.lr_scheduler._target_}>")
+    model.lr_scheduler = hydra.utils.instantiate(config.lr_scheduler, model.optimizer)
+
+    # Init lr scheduler
+    log.info(f"Instantiating leraning rate scheduler <{config.criterion._target_}>")
+    model.criterion = hydra.utils.instantiate(config.criterion)
 
     # Init Lightning callbacks
     callbacks: List[Callback] = []
@@ -53,9 +71,7 @@ def train(config: DictConfig) -> Optional[float]:
 
     # Init Lightning trainer
     log.info(f"Instantiating trainer <{config.trainer._target_}>")
-    trainer: Trainer = hydra.utils.instantiate(
-        config.trainer, callbacks=callbacks, logger=logger, _convert_="partial"
-    )
+    trainer: Trainer = hydra.utils.instantiate(config.trainer, callbacks=callbacks, logger=logger)
 
     # Send some parameters from config to all lightning loggers
     log.info("Logging hyperparameters!")
@@ -73,9 +89,10 @@ def train(config: DictConfig) -> Optional[float]:
     trainer.fit(model=model, datamodule=datamodule)
 
     # Evaluate model on test set after training
-    if not config.trainer.get("fast_dev_run"):
-        log.info("Starting testing!")
-        trainer.test()
+    if 'do_test' in config:
+        if  config.get("do_test"):
+            log.info("Starting testing!")
+            trainer.test()
 
     # Make sure everything closed properly
     log.info("Finalizing!")
@@ -92,6 +109,7 @@ def train(config: DictConfig) -> Optional[float]:
     log.info(f"Best checkpoint path:\n{trainer.checkpoint_callback.best_model_path}")
 
     # Return metric score for hyperparameter optimization
-    optimized_metric = config.get("optimized_metric")
-    if optimized_metric:
-        return trainer.callback_metrics[optimized_metric]
+    if 'optimized_metric' in config:
+        optimized_metric = config.get("optimized_metric")
+        if optimized_metric:
+            return trainer.callback_metrics[optimized_metric]

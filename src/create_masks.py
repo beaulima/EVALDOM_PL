@@ -1,21 +1,25 @@
 import os
+from typing import List, Optional
 os.environ["MKL_NUM_THREADS"] = "1" 
 os.environ["NUMEXPR_NUM_THREADS"] = "1" 
-os.environ["OMP_NUM_THREADS"] = "1" 
+os.environ["OMP_NUM_THREADS"] = "1"
+from pathlib import Path as P
+import hydra
+from omegaconf import DictConfig
+
+from src.utils import utils
+log = utils.get_logger(__name__)
 
 import numpy as np
 np.random.seed(1)
 import random
 random.seed(1)
-import pandas as pd
 import cv2
 import timeit
 from os import path, makedirs, listdir
 import sys
 sys.setrecursionlimit(10000)
 from multiprocessing import Pool
-from skimage.morphology import square, dilation, watershed, erosion
-from skimage import io
 
 from shapely.wkt import loads
 from shapely.geometry import mapping, Polygon
@@ -27,7 +31,7 @@ import json
 
 masks_dir = 'masks'
 
-train_dirs = ['train', 'tier3']
+train_suffixes = ['train', 'tier3', 'test']
 
 
 def mask_for_polygon(poly, im_size=(1024, 1024)):
@@ -50,6 +54,7 @@ damage_dict = {
 
 
 def process_image(json_file):
+    json_file = str(json_file)
     js1 = json.load(open(json_file))
     js2 = json.load(open(json_file.replace('_pre_disaster', '_post_disaster')))
 
@@ -72,19 +77,23 @@ def process_image(json_file):
 
 
 
-if __name__ == '__main__':
+def create_masks(config: DictConfig) -> Optional[float]:
     t0 = timeit.default_timer()
+
+    train_dirs = [P(config.data_dir).joinpath(x) for x in train_suffixes]
 
     all_files = []
     for d in train_dirs:
-        makedirs(path.join(d, masks_dir), exist_ok=True)
-        for f in sorted(listdir(path.join(d, 'images'))):
-            if '_pre_disaster.png' in f:
-                all_files.append(path.join(d, 'labels', f.replace('_pre_disaster.png', '_pre_disaster.json')))
+        masks_dir_path = d.joinpath(masks_dir)
+        images_dir_path = d.joinpath('images')
+        labels_dir_path = d.joinpath('labels')
+        masks_dir_path.mkdir(exist_ok=True, parents=True)
 
+        files = [x.name for x in images_dir_path.iterdir() ]
+        all_files = [labels_dir_path.joinpath(f.replace('_pre_disaster.png', '_pre_disaster.json')) for f in sorted(files) if '_pre_disaster.png' in f ]
 
-    with Pool() as pool:
-        _ = pool.map(process_image, all_files)
+        with Pool() as pool:
+            _ = pool.map(process_image, all_files)
 
     elapsed = timeit.default_timer() - t0
     print('Time: {:.3f} min'.format(elapsed / 60))

@@ -1,3 +1,4 @@
+# @package _group_
 _target_: pytorch_lightning.Trainer
 
 # set `1` to train on GPU, `0` to train on CPU only
@@ -5,9 +6,8 @@ gpus: 4
 accelerator: dp
 
 min_epochs: 1
-max_epochs: 10
+max_epochs: 200
 weights_summary: null
-progress_bar_refresh_rate: 10
-limit_train_batches: 2
-
+progress_bar_refresh_rate: 1
+precision: 16
 # resume_from_checkpoint: null

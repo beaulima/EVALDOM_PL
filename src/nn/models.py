@@ -583,7 +583,7 @@ class SeNet154_Unet_Loc(nn.Module):
         self.conv9_2 = ConvRelu(decoder_filters[-4] + encoder_filters[-5], decoder_filters[-4])
         self.conv10 = ConvRelu(decoder_filters[-4], decoder_filters[-5])
         
-        self.res = nn.Conv2d(decoder_filters[-5], 1, 1, stride=1, padding=0)
+        self.res = nn.Conv2d(decoder_filters[-5], 2, 1, stride=1, padding=0)
 
         self._initialize_weights()
 
@@ -610,25 +610,21 @@ class SeNet154_Unet_Loc(nn.Module):
         enc5 = self.conv5(enc4)
 
         dec6 = self.conv6(F.interpolate(enc5, scale_factor=2))
-        dec6 = self.conv6_2(torch.cat([dec6, enc4
-                ], 1))
+        dec6 = self.conv6_2(torch.cat([dec6, enc4], 1))
 
         dec7 = self.conv7(F.interpolate(dec6, scale_factor=2))
-        dec7 = self.conv7_2(torch.cat([dec7, enc3
-                ], 1))
+        dec7 = self.conv7_2(torch.cat([dec7, enc3], 1))
         
         dec8 = self.conv8(F.interpolate(dec7, scale_factor=2))
-        dec8 = self.conv8_2(torch.cat([dec8, enc2
-                ], 1))
+        dec8 = self.conv8_2(torch.cat([dec8, enc2], 1))
 
         dec9 = self.conv9(F.interpolate(dec8, scale_factor=2))
-        dec9 = self.conv9_2(torch.cat([dec9, 
-                enc1
-                ], 1))
+        dec9 = self.conv9_2(torch.cat([dec9, enc1], 1))
 
         dec10 = self.conv10(F.interpolate(dec9, scale_factor=2))
 
-        return self.res(dec10)
+        res = self.res(dec10)
+        return res
 
     def _initialize_weights(self):
         for m in self.modules():
@@ -684,21 +680,16 @@ class SeNet154_Unet_Double(nn.Module):
         enc5 = self.conv5(enc4)
 
         dec6 = self.conv6(F.interpolate(enc5, scale_factor=2))
-        dec6 = self.conv6_2(torch.cat([dec6, enc4
-                ], 1))
+        dec6 = self.conv6_2(torch.cat([dec6, enc4], 1))
 
         dec7 = self.conv7(F.interpolate(dec6, scale_factor=2))
-        dec7 = self.conv7_2(torch.cat([dec7, enc3
-                ], 1))
+        dec7 = self.conv7_2(torch.cat([dec7, enc3], 1))
         
         dec8 = self.conv8(F.interpolate(dec7, scale_factor=2))
-        dec8 = self.conv8_2(torch.cat([dec8, enc2
-                ], 1))
+        dec8 = self.conv8_2(torch.cat([dec8, enc2], 1))
 
         dec9 = self.conv9(F.interpolate(dec8, scale_factor=2))
-        dec9 = self.conv9_2(torch.cat([dec9, 
-                enc1
-                ], 1))
+        dec9 = self.conv9_2(torch.cat([dec9, enc1], 1))
 
         dec10 = self.conv10(F.interpolate(dec9, scale_factor=2))
 

@@ -1,4 +1,5 @@
-# https://wandb.ai (Weights&Biases)
+
+# @package _group_# https://wandb.ai (Weights&Biases)
 
 wandb:
     _target_: pytorch_lightning.loggers.wandb.WandbLogger
@@ -7,4 +8,4 @@ wandb:
     # offline: False  # set True to store all logs only locally
     job_type: "train"
     group: ""
-    save_dir: "."
+    save_dir: "${env:HOME_EXPERIMENT}/wandb/"

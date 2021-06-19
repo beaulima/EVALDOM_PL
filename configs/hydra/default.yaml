@@ -1,8 +1,8 @@
-# output paths for hydra logs
+# @package _group_
 run:
-    dir: logs/runs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${env:HOME_EXPERIMENT}/EvalDom/nobackup/runs/${experiment_id}/${now:%Y-%m-%d}-${now:%H-%M-%S}
 sweep:
-    dir: logs/multiruns/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ${env:HOME_EXPERIMENT}/EvalDom/nobackup/multiruns/${now:%Y-%m-%d_%H-%M-%S}
     subdir: ${hydra.job.num}
 
 # you can set here environment variables that are universal for all users

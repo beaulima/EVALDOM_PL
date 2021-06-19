@@ -5,12 +5,29 @@ channels:
   - conda-forge
 
 dependencies:
-  - python=3.8
+  - python>=3.8
   - pip
   - notebook
   - ipython
   - cudatoolkit
-  - pytorch=1.8.1
-  - torchvision=0.9.1
+  - pytorch>=1.8.1
+  - torchvision>=0.9.1
+  - torchmetrics
+  - hydra-core
+  - wandb
+  - mlflow
+  - rich
+  - python-dotenv
+  - pytest
+  - sh
+  - pre-commit
+  - scikit-learn
+  - pandas
+  - matplotlib
+  - seaborn
+  - shapely
+  - pytorch-lightning
+  - segmentation-models-pytorch
+  - pyqt
   - pip:
       - -r requirements.txt

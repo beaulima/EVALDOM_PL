@@ -3,9 +3,9 @@ import math
 import torch
 import torch.nn
 import torch.nn as nn
-from src.models.modules.layers.coordconv import CoordConv2d, CoordConvTranspose2d, AddCoords, make_conv2d
-from src.models.modules.layers.srm import setup_srm_layer, setup_srm_weights
-from src.models.modules.layers.lambda_layer import LambdaLayer
+from src.nn.layers.coordconv import CoordConv2d, CoordConvTranspose2d, AddCoords, make_conv2d
+from src.nn.layers.srm import setup_srm_layer, setup_srm_weights
+from src.nn.layers.lambda_layer import LambdaLayer
 
 warned_bad_input_size_power2 = False
 

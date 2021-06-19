@@ -1,7 +1,6 @@
 import dotenv
 import hydra
 from omegaconf import DictConfig
-
 # load environment variables from `.env` file if it exists
 # recursively searches for `.env` in all folders starting from work dir
 dotenv.load_dotenv(override=True)
@@ -26,6 +25,11 @@ def main(config: DictConfig):
     # Pretty print config using Rich library
     if config.get("print_config"):
         utils.print_config(config, resolve=True)
+
+    if config.do_create_masks:
+        from src.create_masks import create_masks
+        return create_masks(config)
+
 
     # Train model
     return train(config)

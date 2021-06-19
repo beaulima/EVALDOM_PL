@@ -1,2 +1,4 @@
 # @package _group_
-_target_: src.nn.models.SeResNext50_Unet_Loc
+_target_: src.nn.models.SeNet154_Unet_Loc
+pretrained: "imagenet"
+num_classes: 2
